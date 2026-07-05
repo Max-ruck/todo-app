@@ -35,9 +35,9 @@ fi
 
 # Serverstandort (Default: Hetzner, Helsinki FI)
 if [[ -z "$SERVER_LOCATION" ]]; then
-  read -rp "Serverstandort für Datenschutzerklärung [Hetzner, Helsinki FI]: " SERVER_LOCATION
+  read -rp "Serverstandort für Datenschutzerklärung (z.B. Hetzner, Frankfurt DE): " SERVER_LOCATION
 fi
-SERVER_LOCATION="${SERVER_LOCATION:-Hetzner, Helsinki FI}"
+SERVER_LOCATION="${SERVER_LOCATION:-Unbekannter Standort}"
 
 # Admin-Email für Certbot (Default: admin@domain)
 if [[ -z "$ADMIN_EMAIL" ]]; then
