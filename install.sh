@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # install.sh – Vollständiges Setup der Todo-App auf einem frischen Ubuntu-Server
-# Aufruf: bash install.sh mydomain.com [server-standort]
+# Aufruf: bash install.sh [domain] [server-standort] [admin-email]
+#         Fehlende Werte werden interaktiv abgefragt.
 #
 # Voraussetzungen:
 #   - Ubuntu 24.04 LTS
@@ -8,25 +9,52 @@
 #   - Domain zeigt bereits per A-Record auf diesen Server
 set -euo pipefail
 
-# ── Argumente ──────────────────────────────────────────────────────────────────
-DOMAIN="${1:-}"
-SERVER_LOCATION="${2:-Dein Hoster, Dein Rechenzentrum}"
-
-if [[ -z "$DOMAIN" ]]; then
-  echo "Fehler: Domain fehlt."
-  echo "Aufruf: bash install.sh mydomain.com [\"Hoster, Rechenzentrum\"]"
-  exit 1
-fi
-
 APP_DIR="/opt/todoapp"
 SERVICE_USER="todoapp"
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
+# ── Argumente oder interaktive Eingabe ────────────────────────────────────────
+DOMAIN="${1:-}"
+SERVER_LOCATION="${2:-}"
+ADMIN_EMAIL="${3:-}"
+
 echo ""
 echo "╔══════════════════════════════════════════════╗"
 echo "║   Todo-App Installer                         ║"
-echo "║   Domain: $DOMAIN"
 echo "╚══════════════════════════════════════════════╝"
+echo ""
+
+# Domain (Pflicht)
+if [[ -z "$DOMAIN" ]]; then
+  read -rp "Domain (z.B. meinedomain.de): " DOMAIN
+fi
+if [[ -z "$DOMAIN" ]]; then
+  echo "Fehler: Domain ist erforderlich. Abbruch."
+  exit 1
+fi
+
+# Serverstandort (Default: Hetzner, Helsinki FI)
+if [[ -z "$SERVER_LOCATION" ]]; then
+  read -rp "Serverstandort für Datenschutzerklärung [Hetzner, Helsinki FI]: " SERVER_LOCATION
+fi
+SERVER_LOCATION="${SERVER_LOCATION:-Hetzner, Helsinki FI}"
+
+# Admin-Email für Certbot (Default: admin@domain)
+if [[ -z "$ADMIN_EMAIL" ]]; then
+  read -rp "Admin-E-Mail für SSL-Zertifikat [admin@${DOMAIN}]: " ADMIN_EMAIL
+fi
+ADMIN_EMAIL="${ADMIN_EMAIL:-admin@${DOMAIN}}"
+
+echo ""
+echo "  Domain:      $DOMAIN"
+echo "  Standort:    $SERVER_LOCATION"
+echo "  Admin-Email: $ADMIN_EMAIL"
+echo ""
+read -rp "Weiter mit Installation? [j/N] " CONFIRM
+if [[ ! "$CONFIRM" =~ ^[jJyY]$ ]]; then
+  echo "Abgebrochen."
+  exit 0
+fi
 echo ""
 
 # ── 1. Pakete ──────────────────────────────────────────────────────────────────
@@ -139,7 +167,7 @@ systemctl restart nginx
 # ── 11. SSL-Zertifikat via Certbot ────────────────────────────────────────────
 echo "=== 11. SSL-Zertifikat einrichten ==="
 certbot --nginx -d "$DOMAIN" --non-interactive --agree-tos \
-  --email "admin@$DOMAIN" --redirect
+  --email "$ADMIN_EMAIL" --redirect
 
 # ── 12. Cronjob: Certbot Auto-Renewal ─────────────────────────────────────────
 echo "=== 12. Certbot-Cronjob einrichten ==="
