@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin-Panel – Aufgaben</title>
+<script src="/todo/api.js"></script>
+<style>
+  :root{--bg:#f0f3f8;--bg2:#fff;--bg3:#e4eaf3;--border:#c8d5e8;--text:#1B3A5C;--text2:#4a6a8a;--accent:#2A5298;--green:#4FC06A;--red:#d94f4f;--amber:#e8a020;--r:8px;}
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:14px;min-height:100vh;}
+  header{background:#1B3A5C;padding:14px 24px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10;}
+  header h1{font-size:15px;font-weight:700;color:#fff;}
+  .btn{padding:7px 14px;border-radius:var(--r);cursor:pointer;font-size:13px;border:1px solid transparent;font-family:inherit;transition:all .15s;}
+  .btn-ghost{background:rgba(255,255,255,.15);border-color:rgba(255,255,255,.3);color:#fff;}
+  .btn-ghost:hover{background:rgba(255,255,255,.25);}
+  .btn-primary{background:var(--green);border-color:var(--green);color:#fff;}
+  .btn-primary:hover{background:#3aaa56;}
+  .btn-danger{background:transparent;border-color:var(--red);color:var(--red);}
+  .btn-danger:hover{background:rgba(217,79,79,.08);}
+  .btn-sm{padding:4px 10px;font-size:12px;}
+  main{max-width:1100px;margin:0 auto;padding:24px;}
+  .tabs{display:flex;gap:2px;border-bottom:2px solid var(--border);margin-bottom:24px;}
+  .tab{padding:8px 18px;cursor:pointer;font-size:13px;color:var(--text2);border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .15s;}
+  .tab.active{color:var(--accent);border-bottom-color:var(--accent);font-weight:600;}
+  .panel{display:none;}.panel.active{display:block;}
+  .card{background:#fff;border:1px solid var(--border);border-radius:var(--r);margin-bottom:16px;overflow:hidden;}
+  .card-head{padding:12px 16px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);background:var(--bg3);}
+  .card-head h3{font-size:13px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.5px;}
+  .card-body{padding:16px;}
+  table{width:100%;border-collapse:collapse;}
+  th{font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;padding:6px 10px;text-align:left;border-bottom:2px solid var(--border);}
+  td{padding:8px 10px;font-size:13px;border-bottom:1px solid var(--bg3);vertical-align:middle;}
+  tr:last-child td{border-bottom:none;}
+  tr:hover td{background:var(--bg3);}
+  .badge{display:inline-block;font-size:11px;padding:2px 8px;border-radius:20px;font-weight:600;}
+  .badge-admin{background:#d94f4f;color:#fff;}
+  .badge-manager{background:#e8a020;color:#fff;}
+  .badge-member{background:#2A5298;color:#fff;}
+  .input{background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:7px 11px;border-radius:var(--r);font-size:13px;outline:none;font-family:inherit;transition:border-color .15s;}
+  .input:focus{border-color:var(--accent);}
+  select.input option{background:var(--bg3);}
+  .form-row{display:flex;gap:8px;align-items:center;margin-bottom:12px;}
+  .form-row label{font-size:11px;color:var(--text2);white-space:nowrap;}
+  .alert{padding:10px 14px;border-radius:var(--r);font-size:13px;margin-bottom:14px;display:none;}
+  .alert.show{display:block;}
+  .alert-ok{background:rgba(79,192,106,.12);border:1px solid rgba(79,192,106,.4);color:#2a8a4a;}
+  .alert-err{background:rgba(217,79,79,.1);border:1px solid rgba(217,79,79,.3);color:var(--red);}
+  .group-card{background:#fff;border:1px solid var(--border);border-radius:var(--r);padding:14px 16px;margin-bottom:10px;}
+  .group-name{font-size:14px;font-weight:700;color:var(--text);margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;}
+  .member-list{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px;}
+  .member-chip{background:var(--bg3);border:1px solid var(--border);border-radius:20px;padding:3px 10px;font-size:12px;display:flex;align-items:center;gap:4px;}
+  .member-chip button{background:none;border:none;cursor:pointer;color:var(--text2);font-size:14px;line-height:1;padding:0;}
+  .member-chip button:hover{color:var(--red);}
+  .empty{font-size:12px;color:var(--text2);font-style:italic;}
+  #pw-modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:100;align-items:center;justify-content:center;}
+  #pw-modal-overlay.show{display:flex;}
+  .modal{background:#fff;border:1px solid var(--border);border-radius:12px;padding:24px;max-width:380px;width:90%;box-shadow:0 8px 32px rgba(27,58,92,.18);}
+  .modal h3{font-size:15px;margin-bottom:14px;color:var(--text);}
+  .modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:16px;}
+  .log-row-created{background:rgba(79,192,106,.06);}
+  .log-row-deleted{background:rgba(217,79,79,.06);}
+  .log-row-escalated{background:rgba(232,160,32,.08);}
+
+  /* ── Mobile (≤600px) ──────────────────────────────────────────────────── */
+  @media(max-width:600px){
+    /* Layout */
+    main{padding:12px;}
+    .tabs{gap:1px;}
+    .tab{padding:7px 10px;font-size:12px;}
+
+    /* Cards für Gruppen */
+    .group-card{padding:12px;}
+    .group-name{font-size:13px;}
+    .member-chip{font-size:11px;padding:2px 7px;}
+
+    /* Benutzer-Tabelle → Cards */
+    #users-tbody tr{display:block;background:#fff;border:1px solid var(--border);border-radius:var(--r);margin-bottom:10px;padding:12px;}
+    #users-tbody tr:hover td{background:transparent;}
+    #users-tbody td{display:block;border:none;padding:3px 0;font-size:13px;}
+    #users-tbody td:before{content:attr(data-label);font-size:10px;color:var(--text2);text-transform:uppercase;letter-spacing:.4px;display:block;margin-bottom:2px;}
+    #users-tbody td > div{flex-wrap:wrap;gap:4px;}
+    #users-tbody td > div .btn,#users-tbody td > div button{flex:1;min-width:120px;text-align:center;}
+    /* Tabellen-Header auf Mobile ausblenden */
+    table thead{display:none;}
+    /* Logs-Tabelle ebenfalls Cards */
+    #log-tbody tr{display:block;background:#fff;border:1px solid var(--border);border-radius:var(--r);margin-bottom:8px;padding:10px;}
+    #log-tbody td{display:block;border:none;padding:2px 0;font-size:12px;white-space:normal;max-width:100%;overflow:visible;text-overflow:unset;}
+    /* Formulare */
+    .form-row{flex-wrap:wrap;}
+    .form-row input,.form-row select{min-width:0;width:100%;}
+    /* PW Modal */
+    #pw-modal-overlay .modal{width:95%;}
+    /* Overflow-x verhindern */
+    .card-body{overflow-x:hidden;}
+    table{width:100%;}
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>🛠 Admin-Panel</h1>
+  <div style="display:flex;gap:8px;align-items:center">
+    <span style="font-size:12px;color:rgba(255,255,255,.6)" id="hdr-user"></span>
+    <a href="/todo/" class="btn btn-ghost btn-sm">← Zur App</a>
+    <button class="btn btn-ghost btn-sm" onclick="API.logout()">Abmelden</button>
+  </div>
+</header>
+
+<main>
+  <div class="tabs">
+    <div class="tab active" onclick="showTab('users')">👥 Benutzer</div>
+    <div class="tab" onclick="showTab('groups')">🏢 Gruppen</div>
+    <div class="tab" onclick="showTab('logs')">📋 Alle Logs</div>
+  </div>
+
+  <!-- ── BENUTZER ──────────────────────────────────────────────────────── -->
+  <div class="panel active" id="panel-users">
+    <div id="alert-users" class="alert"></div>
+    <div class="card" style="margin-bottom:16px">
+      <div class="card-head"><h3>🔗 Einladungs-Link</h3></div>
+      <div class="card-body">
+        <p style="font-size:12px;color:var(--text2);margin-bottom:12px">
+          Generiere einen einmaligen Link (24h gültig), den neue Nutzer zur Registrierung verwenden.
+        </p>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <button class="btn btn-primary btn-sm" onclick="generateInvite()">+ Einladungs-Link generieren</button>
+          <input id="invite-link-box" type="text" class="input" readonly
+                 style="flex:1;min-width:240px;display:none;font-size:12px;cursor:pointer"
+                 onclick="this.select();document.execCommand('copy');showAlert('users','Link kopiert ✓',false)"
+                 title="Klicken zum Kopieren">
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-head"><h3>Alle Benutzer</h3>
+        <button class="btn btn-primary btn-sm" onclick="loadUsers()">↻ Aktualisieren</button>
+      </div>
+      <div class="card-body" style="padding:0">
+        <table>
+          <thead><tr>
+            <th>Benutzer-Tag</th>
+            <th>Rolle</th>
+            <th>Gruppen</th>
+            <th>Registriert</th>
+            <th>Aktionen</th>
+          </tr></thead>
+          <tbody id="users-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── GRUPPEN ───────────────────────────────────────────────────────── -->
+  <div class="panel" id="panel-groups">
+    <div id="alert-groups" class="alert"></div>
+    <div class="card" style="margin-bottom:20px">
+      <div class="card-head"><h3>Neue Gruppe anlegen</h3></div>
+      <div class="card-body">
+        <div class="form-row">
+          <label>Gruppenname</label>
+          <input id="new-group-name" class="input" placeholder="z.B. proLogistik" style="width:240px"
+                 onkeydown="if(event.key==='Enter')createGroup()">
+          <button class="btn btn-primary btn-sm" onclick="createGroup()">+ Anlegen</button>
+        </div>
+      </div>
+    </div>
+    <div id="groups-list"></div>
+  </div>
+
+  <!-- ── LOGS ──────────────────────────────────────────────────────────── -->
+  <div class="panel" id="panel-logs">
+    <div id="alert-logs" class="alert"></div>
+    <div class="card">
+      <div class="card-head">
+        <h3>📋 Gruppen-Logs</h3>
+        <button class="btn btn-primary btn-sm" onclick="loadAllLogs()">↻ Aktualisieren</button>
+      </div>
+      <div class="card-body">
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
+          <select id="log-filter-group" class="input" style="font-size:12px;padding:5px 8px;min-width:150px" onchange="applyLogFilters()">
+            <option value="">Alle Gruppen</option>
+          </select>
+          <select id="log-filter-action" class="input" style="font-size:12px;padding:5px 8px;min-width:140px" onchange="applyLogFilters()">
+            <option value="">Alle Aktionen</option>
+            <option value="created">✨ Erstellt</option>
+            <option value="completed">✅ Abgeschlossen</option>
+            <option value="deleted">🗑 Gelöscht</option>
+            <option value="status_changed">🔄 Status geändert</option>
+            <option value="delegated">📤 Gesendet</option>
+            <option value="delegation_accepted">✅ Sendung angenommen</option>
+            <option value="delegation_rejected">❌ Sendung abgelehnt</option>
+            <option value="comment_added">💬 Kommentar</option>
+            <option value="checkin_changed">☑️ Check-in</option>
+            <option value="escalated">🚨 Eskaliert</option>
+          </select>
+          <select id="log-filter-period" class="input" style="font-size:12px;padding:5px 8px" onchange="applyLogFilters()">
+            <option value="">Alle Zeiträume</option>
+            <option value="today">Heute</option>
+            <option value="week">Diese Woche</option>
+            <option value="month">Dieser Monat</option>
+          </select>
+          <input id="log-filter-title" class="input" style="font-size:12px;padding:5px 8px;flex:1;min-width:140px" placeholder="Titel suchen…" oninput="applyLogFilters()">
+        </div>
+        <div style="overflow-x:auto">
+          <table id="log-table">
+            <thead><tr>
+              <th>Zeitpunkt</th>
+              <th>Gruppe</th>
+              <th>Aktion</th>
+              <th>Todo</th>
+              <th>User</th>
+              <th>Detail</th>
+            </tr></thead>
+            <tbody id="log-tbody"><tr><td colspan="6" class="empty" style="padding:24px;text-align:center">Tab öffnen zum Laden.</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- Passwort-Reset Modal -->
+<div id="pw-modal-overlay">
+  <div class="modal">
+    <h3>🔑 Passwort zurücksetzen</h3>
+    <p id="pw-modal-user" style="font-size:13px;color:var(--text2);margin-bottom:12px;"></p>
+    <input id="pw-modal-input" class="input" type="password"
+           placeholder="Neues Passwort (min. 4 Zeichen)"
+           style="width:100%;margin-bottom:4px"
+           onkeydown="if(event.key==='Enter')submitPwReset()">
+    <div class="modal-actions">
+      <button class="btn" style="border-color:var(--border);color:var(--text2)"
+              onclick="closePwModal()">Abbrechen</button>
+      <button class="btn btn-primary" onclick="submitPwReset()">Speichern</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── Auth-Guard ─────────────────────────────────────────────────────────────
+if (!API.isLoggedIn()) { window.location.href = API._BASE + '/login.html'; }
+
+let _allUsers = [];
+let _pwTargetId = null;
+
+function esc(s) { return s ? s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') : ''; }
+
+// ── Tabs ───────────────────────────────────────────────────────────────────
+function showTab(id) {
+  document.querySelectorAll('.tab').forEach((t,i) => t.classList.toggle('active', t.onclick.toString().includes(id)));
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('panel-' + id).classList.add('active');
+  if (id === 'groups') loadGroups();
+  if (id === 'logs')   loadAllLogs();
+}
+
+// ── Alerts ─────────────────────────────────────────────────────────────────
+function showAlert(zone, msg, isErr) {
+  const el = document.getElementById('alert-' + zone);
+  el.textContent = msg;
+  el.className = 'alert show ' + (isErr ? 'alert-err' : 'alert-ok');
+  setTimeout(() => el.classList.remove('show'), 3500);
+}
+
+// ── Benutzer laden ─────────────────────────────────────────────────────────
+async function loadUsers() {
+  try {
+    _allUsers = await API.get('/admin/users');
+    const tbody = document.getElementById('users-tbody');
+    if (!_allUsers.length) { tbody.innerHTML = '<tr><td colspan="5" class="empty" style="padding:16px">Keine Benutzer.</td></tr>'; return; }
+    tbody.innerHTML = _allUsers.map(u => {
+      const isInactive  = u.status === 'inactive';
+      const statusBadge = isInactive
+        ? '<span style="font-size:10px;background:rgba(217,79,79,.15);color:#d94f4f;border:1px solid rgba(217,79,79,.3);border-radius:3px;padding:1px 6px;margin-left:6px;font-weight:600">inaktiv</span>'
+        : '';
+      const pwBtn         = `<button class="btn btn-sm" style="border-color:var(--amber);color:var(--amber)" onclick="openPwModal(${u.id},'${esc(u.user_tag)}')">&#x1F511; PW</button>`;
+      const deactivateBtn = !isInactive ? `<button class="btn btn-sm btn-danger" onclick="adminDeactivateUser(${u.id},'${esc(u.user_tag)}')">&#x1F6AB; Deaktivieren</button>` : '';
+      const activateBtn   =  isInactive ? `<button class="btn btn-sm btn-primary" onclick="adminActivateUser(${u.id})">&#x2713; Reaktivieren</button>` : '';
+      const deleteBtn     =  isInactive ? `<button class="btn btn-danger btn-sm" onclick="adminDeleteUser(${u.id},'${esc(u.user_tag)}')">&#x1F5D1; Löschen</button>` : '';
+      return `<tr${isInactive ? ' style="opacity:.6"' : ''}>
+        <td><strong>${esc(u.user_tag)}</strong>${statusBadge}</td>
+        <td>
+          ${roleBadge(u.role)}
+          <select class="input btn-sm" style="margin-left:6px;width:110px" onchange="setRole(${u.id}, this.value)">
+            ${['admin','manager','member'].map(r => `<option value="${r}"${u.role===r?' selected':''}>${r}</option>`).join('')}
+          </select>
+        </td>
+        <td>${(u.groups||[]).map(g=>`<span class="badge" style="background:var(--bg3);color:var(--text2);margin-right:3px">${esc(g.name)}</span>`).join('')||'<span class="empty">–</span>'}</td>
+        <td style="color:var(--text2);font-size:12px">${u.created ? u.created.slice(0,10) : '–'}</td>
+        <td><div style="display:flex;gap:4px;flex-wrap:wrap">${pwBtn}${deactivateBtn}${activateBtn}${deleteBtn}</div></td>
+      </tr>`;
+    }).join('');
+  } catch (e) {
+    showAlert('users', 'Fehler: ' + e.message, true);
+  }
+}
+
+function roleBadge(role) {
+  const cls = role === 'admin' ? 'badge-admin' : role === 'manager' ? 'badge-manager' : 'badge-member';
+  return `<span class="badge ${cls}">${role}</span>`;
+}
+
+async function setRole(userId, role) {
+  try {
+    await API.put(`/admin/users/${userId}/role`, { role });
+    showAlert('users', 'Rolle gespeichert ✓', false);
+    await loadUsers();
+  } catch (e) { showAlert('users', 'Fehler: ' + e.message, true); }
+}
+
+async function adminActivateUser(userId) {
+  try {
+    await API.put('/admin/users/' + userId + '/activate', {});
+    showAlert('users', 'User reaktiviert ✓');
+    loadUsers();
+  } catch(e) { showAlert('users', 'Fehler: ' + e.message, true); }
+}
+
+async function adminDeactivateUser(userId, userTag) {
+  if (!confirm(`User "${userTag}" wirklich deaktivieren?\n\nOffene Todos werden automatisch gesendet oder zurückgestellt.`)) return;
+  try {
+    await API.put('/admin/users/' + userId + '/deactivate', {});
+    showAlert('users', `User "${userTag}" deaktiviert ✓`);
+    loadUsers();
+  } catch(e) { showAlert('users', 'Fehler: ' + e.message, true); }
+}
+
+// ── Passwort-Reset ─────────────────────────────────────────────────────────
+function openPwModal(userId, userTag) {
+  _pwTargetId = userId;
+  document.getElementById('pw-modal-user').textContent = 'Benutzer: ' + userTag;
+  document.getElementById('pw-modal-input').value = '';
+  document.getElementById('pw-modal-overlay').classList.add('show');
+  setTimeout(() => document.getElementById('pw-modal-input').focus(), 100);
+}
+function closePwModal() {
+  document.getElementById('pw-modal-overlay').classList.remove('show');
+  _pwTargetId = null;
+}
+async function submitPwReset() {
+  const pw = document.getElementById('pw-modal-input').value;
+  if (!pw || pw.length < 4) { alert('Passwort muss mindestens 4 Zeichen haben.'); return; }
+  try {
+    await API.post(`/admin/users/${_pwTargetId}/password`, { password: pw });
+    closePwModal();
+    showAlert('users', 'Passwort zurückgesetzt ✓', false);
+  } catch (e) { showAlert('users', 'Fehler: ' + e.message, true); }
+}
+
+// ── Gruppen ────────────────────────────────────────────────────────────────
+async function loadGroups() {
+  try {
+    const groups = await API.get('/admin/groups');
+    const list = document.getElementById('groups-list');
+    if (!groups.length) {
+      list.innerHTML = '<div class="empty" style="padding:12px">Noch keine Gruppen angelegt.</div>';
+      return;
+    }
+    // Für Member-Hinzufügen brauchen wir die User-Liste
+    if (!_allUsers.length) _allUsers = await API.get('/admin/users');
+
+    list.innerHTML = groups.map(g => `
+      <div class="group-card">
+        <div class="group-name">
+          <span>🏢 ${esc(g.name)}</span>
+          <button class="btn btn-danger btn-sm" onclick="deleteGroup(${g.id})">Löschen</button>
+        </div>
+        <div class="member-list" id="members-${g.id}">
+          ${(g.members||[]).map(m => {
+            const isGrpAdmin = m.role === 'admin';
+            const toggleTitle = isGrpAdmin ? 'Gruppen-Admin entfernen' : 'Zum Gruppen-Admin machen';
+            const toggleIcon  = isGrpAdmin ? '👑' : '○';
+            const toggleRole  = isGrpAdmin ? 'member' : 'admin';
+            return `<span class="member-chip" style="${isGrpAdmin?'border-color:#4a82d4;background:rgba(74,130,212,.08)':''}">
+              ${esc(m.user_tag)}
+              ${isGrpAdmin ? '<span style="font-size:10px;color:#4a82d4;font-weight:700">Admin</span>' : ''}
+              <button onclick="setGroupMemberRole(${g.id},${m.id},'${toggleRole}')"
+                      title="${toggleIcon} ${toggleTitle}"
+                      style="color:${isGrpAdmin?'#4a82d4':'var(--text2)'}">👑</button>
+              <button onclick="removeMember(${g.id},${m.id})" title="Entfernen">×</button>
+            </span>`;
+          }).join('') || '<span class="empty">Keine Mitglieder</span>'}
+        </div>
+        <div style="display:flex;gap:6px;align-items:center;margin-top:8px">
+          <select class="input btn-sm" id="add-sel-${g.id}" style="width:200px">
+            <option value="">– User hinzufügen –</option>
+            ${_allUsers
+              .filter(u => !(g.members||[]).find(m => m.id === u.id))
+              .map(u => `<option value="${u.id}">${esc(u.user_tag)}</option>`)
+              .join('')}
+          </select>
+          <button class="btn btn-primary btn-sm" onclick="addMember(${g.id})">+ Hinzufügen</button>
+        </div>
+      </div>
+    `).join('');
+  } catch (e) { showAlert('groups', 'Fehler: ' + e.message, true); }
+}
+
+async function createGroup() {
+  const name = document.getElementById('new-group-name').value.trim();
+  if (!name) return;
+  try {
+    await API.post('/admin/groups', { name });
+    document.getElementById('new-group-name').value = '';
+    showAlert('groups', `Gruppe "${name}" erstellt ✓`, false);
+    loadGroups();
+  } catch (e) { showAlert('groups', 'Fehler: ' + e.message, true); }
+}
+
+async function deleteGroup(groupId) {
+  if (!confirm('Gruppe wirklich löschen?')) return;
+  try {
+    await API.request('DELETE', `/admin/groups/${groupId}`);
+    showAlert('groups', 'Gruppe gelöscht ✓', false);
+    loadGroups();
+  } catch (e) { showAlert('groups', 'Fehler: ' + e.message, true); }
+}
+
+async function addMember(groupId) {
+  const sel = document.getElementById('add-sel-' + groupId);
+  const userId = parseInt(sel.value);
+  if (!userId) return;
+  try {
+    await API.post(`/admin/groups/${groupId}/members`, { user_id: userId });
+    loadGroups();
+  } catch (e) { showAlert('groups', 'Fehler: ' + e.message, true); }
+}
+
+async function removeMember(groupId, userId) {
+  try {
+    await API.request('DELETE', `/admin/groups/${groupId}/members/${userId}`);
+    loadGroups();
+  } catch (e) { showAlert('groups', 'Fehler: ' + e.message, true); }
+}
+
+async function setGroupMemberRole(groupId, userId, role) {
+  try {
+    await API.put(`/groups/${groupId}/members/${userId}/role`, { role });
+    showAlert('groups', role === 'admin' ? '👑 Zum Gruppen-Admin gemacht ✓' : 'Gruppen-Admin entfernt ✓', false);
+    loadGroups();
+  } catch (e) { showAlert('groups', 'Fehler: ' + e.message, true); }
+}
+
+// ── Einladungs-Link ────────────────────────────────────────────────────────
+async function generateInvite() {
+  try {
+    const data = await API.post('/admin/invite', {});
+    const box = document.getElementById('invite-link-box');
+    box.value = data.link;
+    box.style.display = '';
+    box.select();
+    document.execCommand('copy');
+    showAlert('users', '🔗 Link generiert und kopiert ✓ (gültig 24h, einmalig)', false);
+  } catch (e) { showAlert('users', 'Fehler: ' + e.message, true); }
+}
+
+// ── Berechtigungsprüfung & Init ────────────────────────────────────────────
+(async () => {
+  try {
+    const me = await API.get('/auth/me');
+    if (me.role !== 'admin') {
+      document.body.innerHTML = '<div style="text-align:center;padding:80px;font-size:15px;color:#d94f4f">⛔ Kein Zugriff – nur für Admins</div>';
+      return;
+    }
+    document.getElementById('hdr-user').textContent = '👤 ' + me.user_tag;
+    loadUsers();
+  } catch (e) {
+    window.location.href = API._BASE + '/login.html';
+  }
+})();
+
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closePwModal(); });
+
+// ── User löschen ───────────────────────────────────────────────────────────
+async function adminDeleteUser(userId, userTag) {
+  if (!confirm(`User "${userTag}" wirklich löschen?\n\nAlle Todos werden archiviert, aktive Sendungen zurückgezogen. Diese Aktion kann nicht rückgängig gemacht werden.`)) return;
+  try {
+    await API.del('/admin/users/' + userId);
+    showAlert('users', `User "${userTag}" gelöscht ✓`, false);
+    loadUsers();
+  } catch (e) { showAlert('users', 'Fehler: ' + e.message, true); }
+}
+
+// ── Alle Gruppen-Logs ──────────────────────────────────────────────────────
+let _allLogs = [];
+
+const _LOG_LABELS = {
+  created: '✨ Erstellt', completed: '✅ Abgeschlossen', deleted: '🗑 Gelöscht',
+  status_changed: '🔄 Status', delegated: '📤 Gesendet',
+  delegation_accepted: '✅ Sendung ✓', delegation_rejected: '❌ Sendung ✗',
+  comment_added: '💬 Kommentar', checkin_changed: '☑️ Check-in', escalated: '🚨 Eskaliert',
+};
+
+async function loadAllLogs() {
+  const tbody = document.getElementById('log-tbody');
+  tbody.innerHTML = '<tr><td colspan="6" class="empty" style="padding:16px;text-align:center">Lädt…</td></tr>';
+  try {
+    _allLogs = await API.get('/admin/groups/logs') || [];
+    // Populate group filter
+    const groups = [...new Map(_allLogs.map(r => [r.group_id, r.group_name])).entries()].sort((a,b)=>a[1].localeCompare(b[1]));
+    const grpSel = document.getElementById('log-filter-group');
+    grpSel.innerHTML = '<option value="">Alle Gruppen</option>' +
+      groups.map(([id, name]) => `<option value="${id}">${esc(name)}</option>`).join('');
+    applyLogFilters();
+  } catch (e) {
+    tbody.innerHTML = `<tr><td colspan="6" style="padding:12px;color:var(--red);text-align:center">Fehler: ${esc(e.message)}</td></tr>`;
+  }
+}
+
+function applyLogFilters() {
+  const fGroup  = document.getElementById('log-filter-group')?.value  || '';
+  const fAction = document.getElementById('log-filter-action')?.value || '';
+  const fTitle  = (document.getElementById('log-filter-title')?.value || '').toLowerCase();
+  const fPeriod = document.getElementById('log-filter-period')?.value || '';
+
+  const now = new Date();
+  const starts = {
+    today: new Date(now.getFullYear(), now.getMonth(), now.getDate()),
+    week:  (() => { const d = new Date(now.getFullYear(), now.getMonth(), now.getDate()); d.setDate(d.getDate()-d.getDay()); return d; })(),
+    month: new Date(now.getFullYear(), now.getMonth(), 1),
+  };
+
+  const rows = _allLogs.filter(r => {
+    if (fGroup  && String(r.group_id) !== fGroup) return false;
+    if (fAction && r.action !== fAction) return false;
+    if (fTitle  && !(r.todo_title||'').toLowerCase().includes(fTitle)) return false;
+    if (fPeriod && starts[fPeriod] && new Date(r.created) < starts[fPeriod]) return false;
+    return true;
+  });
+
+  const tbody = document.getElementById('log-tbody');
+  if (!rows.length) {
+    tbody.innerHTML = '<tr><td colspan="6" class="empty" style="padding:16px;text-align:center">Keine Einträge.</td></tr>';
+    return;
+  }
+
+  const rowClass = a => a==='created'?'log-row-created':a==='deleted'||a==='delegation_rejected'?'log-row-deleted':a==='escalated'?'log-row-escalated':'';
+  tbody.innerHTML = rows.map(r => {
+    const detail = r.new_value && r.old_value ? `${esc(r.old_value)} → ${esc(r.new_value)}`
+                 : r.new_value ? esc(r.new_value)
+                 : r.old_value ? esc(r.old_value) : '–';
+    return `<tr class="${rowClass(r.action)}">
+      <td style="font-size:11px;color:var(--text2);white-space:nowrap">${r.created ? r.created.slice(0,16).replace('T',' ') : '–'}</td>
+      <td><span class="badge" style="background:var(--bg3);color:var(--text2)">${esc(r.group_name||'')}</span></td>
+      <td style="font-size:12px">${_LOG_LABELS[r.action]||esc(r.action)}</td>
+      <td style="font-size:12px;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(r.todo_title||'')}">${esc(r.todo_title||'–')}</td>
+      <td style="font-size:12px">${esc(r.actor_user_tag||'–')}</td>
+      <td style="font-size:11px;color:var(--text2);max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${detail}">${detail}</td>
+    </tr>`;
+  }).join('');
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,22 @@
+# Secrets & Datenbank
+backend/.env
+backend/todo.db
+backend/*.db
+backend/*.log
+
+# Python
+backend/__pycache__/
+backend/*.pyc
+backend/*.pyo
+*.egg-info/
+.venv/
+venv/
+
+# Claude Code
+.claude/
+
+# Windows-Artefakte
+Thumbs.db
+
+# OS
+.DS_Store

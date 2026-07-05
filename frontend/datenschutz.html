@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Datenschutzerklärung – Aufgaben</title>
+<style>
+  :root{--bg:#f0f3f8;--bg2:#fff;--border:#c8d5e8;--text:#1B3A5C;--text2:#4a6a8a;--accent:#2A5298;--r:8px;}
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:15px;line-height:1.7;min-height:100vh;}
+  header{background:#1B3A5C;padding:14px 24px;display:flex;align-items:center;justify-content:space-between;}
+  header h1{font-size:16px;font-weight:700;color:#fff;}
+  header a{color:rgba(255,255,255,.8);font-size:13px;text-decoration:none;}
+  header a:hover{color:#fff;}
+  main{max-width:780px;margin:0 auto;padding:40px 24px 60px;}
+  h2{font-size:20px;font-weight:700;color:var(--text);margin:32px 0 12px;padding-bottom:6px;border-bottom:2px solid var(--border);}
+  h2:first-of-type{margin-top:0;}
+  h3{font-size:15px;font-weight:700;color:var(--accent);margin:20px 0 6px;}
+  p{margin-bottom:12px;color:var(--text2);}
+  ul{margin:0 0 12px 20px;color:var(--text2);}
+  li{margin-bottom:4px;}
+  .card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:20px 24px;margin-bottom:20px;}
+  .highlight{background:rgba(42,82,152,.06);border-left:3px solid var(--accent);padding:10px 14px;border-radius:0 var(--r) var(--r) 0;margin-bottom:12px;font-size:14px;color:var(--text);}
+  table{width:100%;border-collapse:collapse;margin-bottom:12px;}
+  th{font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:var(--text2);padding:8px 10px;border-bottom:2px solid var(--border);text-align:left;}
+  td{padding:8px 10px;font-size:14px;border-bottom:1px solid var(--bg);color:var(--text2);}
+  tr:last-child td{border-bottom:none;}
+  .updated{font-size:12px;color:var(--text2);margin-top:40px;padding-top:16px;border-top:1px solid var(--border);}
+</style>
+</head>
+<body>
+<header>
+  <h1>📋 Datenschutzerklärung</h1>
+  <a href="/todo/">← Zurück zur App</a>
+</header>
+<main>
+
+<div class="highlight">
+  Diese App ist ein internes Werkzeug. Es werden keine Daten an Dritte weitergegeben und kein Tracking eingesetzt.
+</div>
+
+<h2>1. Verantwortlicher</h2>
+<div class="card">
+  <p>Diese Anwendung wird betrieben auf einem Server (Standort: {SERVER_LOCATION}). Der Betreiber ist der jeweilige Account-Inhaber, der den Server betreibt.</p>
+</div>
+
+<h2>2. Was wird gespeichert?</h2>
+<div class="card">
+  <table>
+    <thead><tr><th>Datenkategorie</th><th>Details</th><th>Speicherort</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Benutzerkonto</strong></td><td>Benutzername (user_tag), Passwort (bcrypt-Hash, kein Klartext), Rolle, Registrierungsdatum, Account-Status</td><td>SQLite DB, {SERVER_LOCATION}</td></tr>
+      <tr><td><strong>Aufgaben (Todos)</strong></td><td>Titel, Beschreibung, Priorität, Kunde/Thema, Links, Erstellungsdatum, Erledigungsdatum</td><td>SQLite DB, {SERVER_LOCATION}</td></tr>
+      <tr><td><strong>Archiv</strong></td><td>Erledigte Todos mit Erledigungsdatum und Bearbeiter-Tag</td><td>SQLite DB, {SERVER_LOCATION}</td></tr>
+      <tr><td><strong>Kommentare</strong></td><td>Kommentartext, Datum, Verfasser-Tag</td><td>In den Todo-Daten (extra_data)</td></tr>
+      <tr><td><strong>Aktivitäts-Log</strong></td><td>Wer hat wann was mit einer Aufgabe gemacht (Erstellt, Erledigt, Gesendet etc.)</td><td>SQLite DB, {SERVER_LOCATION}</td></tr>
+      <tr><td><strong>Check-ins</strong></td><td>Status-Check-in-Historie pro Aufgabe</td><td>In den Todo-Daten</td></tr>
+      <tr><td><strong>Session-Token</strong></td><td>JWT-Token zur Authentifizierung, gespeichert im Browser (sessionStorage/localStorage)</td><td>Nur im Browser</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<h2>3. Kein Tracking, keine Cookies</h2>
+<div class="card">
+  <p>Diese App verwendet <strong>keinen</strong> Tracking-Cookie und <strong>keine</strong> Analyse-Tools (kein Google Analytics, kein Matomo etc.). Der einzige Browser-Speicher ist der Session-Token (JWT), der für die Anmeldung technisch notwendig ist.</p>
+</div>
+
+<h2>4. Zweck der Verarbeitung</h2>
+<div class="card">
+  <ul>
+    <li>Authentifizierung und Zugriffskontrolle</li>
+    <li>Speicherung und Verwaltung von Aufgaben</li>
+    <li>Zusammenarbeit in Gruppen (Sendung, Freigabe)</li>
+    <li>Aktivitätsprotokoll für Gruppen-Administratoren</li>
+  </ul>
+</div>
+
+<h2>5. Löschfristen</h2>
+<div class="card">
+  <table>
+    <thead><tr><th>Datenkategorie</th><th>Löschfrist</th><th>Hinweis</th></tr></thead>
+    <tbody>
+      <tr><td>Archivierte Todos</td><td>365 Tage nach Archivierung</td><td>Schutzfrist: nicht vor Ablauf löschbar</td></tr>
+      <tr><td>Inaktive User-Accounts</td><td>6 Monate nach Deaktivierung</td><td>Manuelle Löschung durch Admin</td></tr>
+      <tr><td>Aktivitäts-Log</td><td>Mit dem Account</td><td>Wird bei Account-Löschung entfernt</td></tr>
+      <tr><td>Session-Token</td><td>Bei Abmeldung oder Tab-Schließen</td><td>sessionStorage wird geleert</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<h2>6. Zugriff auf die Daten</h2>
+<div class="card">
+  <ul>
+    <li><strong>Du selbst</strong>: Vollzugriff auf deine eigenen Todos, Archiv und Kommentare</li>
+    <li><strong>Gruppen-Administratoren</strong>: Sehen den Aktivitäts-Log aller Gruppenmitglieder</li>
+    <li><strong>System-Administratoren</strong>: Vollzugriff auf alle Daten zur technischen Verwaltung</li>
+    <li><strong>Dritte</strong>: Kein Zugriff. Keine Weitergabe an externe Dienste.</li>
+  </ul>
+</div>
+
+<h2>7. Deine Rechte</h2>
+<div class="card">
+  <h3>Recht auf Auskunft (Art. 15 DSGVO)</h3>
+  <p>Du kannst jederzeit über ⚙️ → „Meine Daten exportieren" alle gespeicherten Daten als JSON herunterladen.</p>
+  <h3>Recht auf Löschung (Art. 17 DSGVO)</h3>
+  <p>Du kannst deinen Account über ⚙️ → „Mein Konto deaktivieren" deaktivieren. Die vollständige Löschung erfolgt durch den System-Administrator, in der Regel binnen 6 Monaten.</p>
+  <h3>Recht auf Datenübertragbarkeit (Art. 20 DSGVO)</h3>
+  <p>Export über ⚙️ → „Meine Daten exportieren" — maschinenlesbar als JSON.</p>
+  <h3>Widerspruchsrecht (Art. 21 DSGVO)</h3>
+  <p>Da diese App kein Tracking und keine Werbeverarbeitung betreibt, beschränkt sich dieses Recht auf die Nutzung der App selbst. Du kannst deinen Account jederzeit deaktivieren.</p>
+</div>
+
+<h2>8. Hosting &amp; Sicherheit</h2>
+<div class="card">
+  <ul>
+    <li>Server: {SERVER_LOCATION}</li>
+    <li>Übertragung: HTTPS (TLS)</li>
+    <li>Passwörter: bcrypt-gehasht, kein Klartext gespeichert</li>
+    <li>Datenbank: SQLite, lokal auf dem Server, kein externer Datenbankdienst</li>
+  </ul>
+</div>
+
+<p class="updated">Stand: {INSTALL_DATE} · Bei Fragen wende dich an den System-Administrator.</p>
+</main>
+</body>
+</html>

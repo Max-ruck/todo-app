@@ -1,0 +1,11 @@
+fastapi==0.115.5
+uvicorn[standard]==0.32.1
+python-multipart==0.0.12
+# JWT: python-jose ist unmaintained → PyJWT als Ersatz
+PyJWT==2.10.1
+# Passwort-Hashing: passlib ist unmaintained → bcrypt direkt
+bcrypt==4.2.1
+# Rate Limiting
+slowapi==0.1.10
+# .env Konfiguration
+python-dotenv==1.2.2

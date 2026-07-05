@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aufgaben – Anmelden</title>
+<script src="/todo/api.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #f0f3f8;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-size: 14px;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .login-card {
+    background: #fff;
+    border: 1px solid #c8d5e8;
+    border-radius: 12px;
+    padding: 36px 32px 28px;
+    width: 100%;
+    max-width: 380px;
+    box-shadow: 0 8px 32px rgba(27,58,92,0.12);
+  }
+
+  .login-logo {
+    text-align: center;
+    font-size: 32px;
+    margin-bottom: 6px;
+  }
+  .login-title {
+    text-align: center;
+    font-size: 18px;
+    font-weight: 700;
+    color: #1B3A5C;
+    margin-bottom: 4px;
+  }
+  .login-sub {
+    text-align: center;
+    font-size: 12px;
+    color: #4a6a8a;
+    margin-bottom: 28px;
+  }
+
+  .tabs {
+    display: flex;
+    background: #e4eaf3;
+    border-radius: 8px;
+    padding: 3px;
+    margin-bottom: 22px;
+    gap: 3px;
+  }
+  .tab-btn {
+    flex: 1;
+    padding: 7px;
+    border: none;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    background: transparent;
+    color: #4a6a8a;
+    transition: all 0.15s;
+  }
+  .tab-btn.active {
+    background: #fff;
+    color: #1B3A5C;
+    box-shadow: 0 1px 4px rgba(27,58,92,0.12);
+  }
+
+  .form-group { margin-bottom: 14px; }
+  .form-label {
+    display: block;
+    font-size: 11px;
+    color: #4a6a8a;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 5px;
+    font-weight: 600;
+  }
+  input[type="text"],
+  input[type="password"] {
+    width: 100%;
+    padding: 10px 12px;
+    background: #e4eaf3;
+    border: 1px solid #c8d5e8;
+    border-radius: 8px;
+    font-size: 14px;
+    color: #1B3A5C;
+    outline: none;
+    transition: border-color 0.15s, background 0.15s;
+    font-family: inherit;
+  }
+  input:focus {
+    border-color: #2A5298;
+    background: #fff;
+  }
+
+  .btn-submit {
+    width: 100%;
+    padding: 11px;
+    background: #4FC06A;
+    border: none;
+    border-radius: 8px;
+    color: #fff;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    margin-top: 6px;
+    transition: background 0.15s;
+    font-family: inherit;
+  }
+  .btn-submit:hover { background: #3aaa56; }
+  .btn-submit:disabled { background: #9ab0d0; cursor: not-allowed; }
+
+  .error-msg {
+    background: rgba(217,79,79,0.1);
+    border: 1px solid rgba(217,79,79,0.35);
+    color: #c03030;
+    border-radius: 7px;
+    padding: 9px 12px;
+    font-size: 13px;
+    margin-bottom: 14px;
+    display: none;
+  }
+  .error-msg.show { display: block; }
+
+  .success-msg {
+    background: rgba(79,192,106,0.1);
+    border: 1px solid rgba(79,192,106,0.35);
+    color: #2a8a4a;
+    border-radius: 7px;
+    padding: 9px 12px;
+    font-size: 13px;
+    margin-bottom: 14px;
+    display: none;
+  }
+  .success-msg.show { display: block; }
+
+  .hint {
+    text-align: center;
+    font-size: 11px;
+    color: #8aa0ba;
+    margin-top: 18px;
+  }
+</style>
+</head>
+<body>
+<div class="login-card">
+  <div class="login-logo">📋</div>
+  <div class="login-title">Aufgaben</div>
+  <div class="login-sub">Aufgabenverwaltung für Teams</div>
+
+  <!-- Login / Registrieren Tabs -->
+  <div class="tabs" id="tabs-row">
+    <button class="tab-btn active" id="tab-login" onclick="showTab('login')">Anmelden</button>
+    <button class="tab-btn" id="tab-register" onclick="showTab('register')" style="display:none">Registrieren</button>
+  </div>
+
+  <div id="error-box" class="error-msg"></div>
+  <div id="success-box" class="success-msg"></div>
+
+  <!-- Login-Formular -->
+  <div id="form-login">
+    <div class="form-group">
+      <label class="form-label" for="l-user">Benutzername</label>
+      <input type="text" id="l-user" autocomplete="username" autofocus
+             placeholder="dein-name" onkeydown="if(event.key==='Enter')doLogin()">
+    </div>
+    <div class="form-group">
+      <label class="form-label" for="l-pass">Passwort</label>
+      <input type="password" id="l-pass" autocomplete="current-password"
+             placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()">
+    </div>
+    <button class="btn-submit" id="btn-login" onclick="doLogin()">Anmelden →</button>
+  </div>
+
+  <!-- Registrier-Formular -->
+  <div id="form-register" style="display:none">
+    <div class="form-group">
+      <label class="form-label" for="r-user">Benutzername</label>
+      <input type="text" id="r-user" autocomplete="username"
+             placeholder="dein-name" onkeydown="if(event.key==='Enter')doRegister()">
+    </div>
+    <div class="form-group">
+      <label class="form-label" for="r-pass">Passwort</label>
+      <input type="password" id="r-pass" autocomplete="new-password"
+             placeholder="••••••••" onkeydown="if(event.key==='Enter')doRegister()">
+    </div>
+    <div class="form-group">
+      <label class="form-label" for="r-pass2">Passwort wiederholen</label>
+      <input type="password" id="r-pass2" autocomplete="new-password"
+             placeholder="••••••••" onkeydown="if(event.key==='Enter')doRegister()">
+    </div>
+    <button class="btn-submit" id="btn-register" onclick="doRegister()">Konto erstellen</button>
+  </div>
+
+  <div class="hint">Todo-App v2 · Multi-User</div>
+</div>
+
+<script>
+  // Bereits eingeloggt? → direkt weiter
+  if (API.isLoggedIn()) window.location.href = API._BASE + '/';
+
+  // ── Einladungs-Token aus URL lesen ──────────────────────────────────────
+  const _urlToken = new URLSearchParams(window.location.search).get('token') || '';
+
+  (async () => {
+    const valid = await API.checkInvite(_urlToken || '__no_token__');
+    if (valid) {
+      document.getElementById('tab-register').style.display = '';
+      if (_urlToken) showTab('register');  // Direkt zum Registrier-Tab wenn Token in URL
+    }
+  })();
+
+  function showTab(tab) {
+    document.getElementById('form-login').style.display    = tab === 'login'    ? '' : 'none';
+    document.getElementById('form-register').style.display = tab === 'register' ? '' : 'none';
+    document.getElementById('tab-login').classList.toggle('active',    tab === 'login');
+    document.getElementById('tab-register').classList.toggle('active', tab === 'register');
+    clearMessages();
+    const focus = tab === 'login' ? 'l-user' : 'r-user';
+    setTimeout(() => document.getElementById(focus).focus(), 50);
+  }
+
+  function showError(msg) {
+    const el = document.getElementById('error-box');
+    el.textContent = msg;
+    el.classList.add('show');
+    document.getElementById('success-box').classList.remove('show');
+  }
+
+  function showSuccess(msg) {
+    const el = document.getElementById('success-box');
+    el.textContent = msg;
+    el.classList.add('show');
+    document.getElementById('error-box').classList.remove('show');
+  }
+
+  function clearMessages() {
+    document.getElementById('error-box').classList.remove('show');
+    document.getElementById('success-box').classList.remove('show');
+  }
+
+  function setLoading(btnId, loading) {
+    const btn = document.getElementById(btnId);
+    btn.disabled = loading;
+    if (loading) btn.textContent = '…';
+    else btn.textContent = btnId === 'btn-login' ? 'Anmelden →' : 'Konto erstellen';
+  }
+
+  async function doLogin() {
+    const username = document.getElementById('l-user').value.trim();
+    const password = document.getElementById('l-pass').value;
+    if (!username || !password) { showError('Bitte alle Felder ausfüllen.'); return; }
+
+    setLoading('btn-login', true);
+    clearMessages();
+    try {
+      await API.login(username, password);
+      window.location.href = API._BASE + '/';
+    } catch (e) {
+      showError(e.message);
+      setLoading('btn-login', false);
+    }
+  }
+
+  async function doRegister() {
+    const username = document.getElementById('r-user').value.trim();
+    const password = document.getElementById('r-pass').value;
+    const password2 = document.getElementById('r-pass2').value;
+
+    if (!username || !password) { showError('Bitte alle Felder ausfüllen.'); return; }
+    if (password !== password2) { showError('Passwörter stimmen nicht überein.'); return; }
+    if (password.length < 4)    { showError('Passwort muss mindestens 4 Zeichen haben.'); return; }
+
+    setLoading('btn-register', true);
+    clearMessages();
+    try {
+      await API.register(username, password, _urlToken);
+      // Direkt einloggen – speichert user_tag + role korrekt via /auth/me
+      await API.login(username, password);
+      window.location.href = API._BASE + '/';
+    } catch (e) {
+      showError(e.message);
+      setLoading('btn-register', false);
+    }
+  }
+</script>
+</body>
+</html>
